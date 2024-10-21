@@ -3,12 +3,13 @@ return {
     { 'williamboman/mason.nvim' },
     { 'williamboman/mason-lspconfig.nvim' },
     { 'hrsh7th/cmp-nvim-lsp' },
+    { 'onsails/lspkind.nvim' },
     {
         'neovim/nvim-lspconfig',
         config = function()
             local lsp_zero = require('lsp-zero')
 
-            local lsp_attach = function(client, bufnr)
+            local lsp_attach = function(_, bufnr)
                 local opts = { buffer = bufnr }
 
                 vim.keymap.set('n', 'K', '<cmd>lua vim.lsp.buf.hover()<cr>', opts)
@@ -55,10 +56,20 @@ return {
         config = function()
             local cmp = require('cmp')
             local cmp_action = require('lsp-zero').cmp_action()
+            local lspkind = require('lspkind')
+
+            -- C for custom xd !
+            vim.api.nvim_set_hl(0, "CPmenu", { bg = "" })
 
             cmp.setup({
                 sources = {
                     { name = 'nvim_lsp' },
+                },
+                window = {
+                    completion = cmp.config.window.bordered({
+                        winhighlight = "Normal:CPmenu,FloatBorder:CPmenu,CursorLine:PmenuSel,Search:None"
+                    }),
+                    documentation = cmp.config.window.bordered()
                 },
                 mapping = cmp.mapping.preset.insert({
                     ['<C-p>'] = cmp.mapping.select_prev_item({ behavior = 'select' }),
@@ -75,8 +86,31 @@ return {
                         vim.snippet.expand(args.body)
                     end,
                 },
+                formatting = {
+                    format = lspkind.cmp_format({
+                        mode = "symbol_text",
+                        maxwidth = 50,
+                        ellipsis_char = "...",
+                        show_labelDetails = true
+                    })
+                }
             })
         end
-
     },
+
+    -- RUST
+    {
+        {
+            'mrcjkb/rustaceanvim',
+            version = '^5',
+            lazy = false,
+        },
+        {
+            'saecki/crates.nvim',
+            event = { "BufRead Cargo.toml" },
+            config = function()
+                require('crates').setup()
+            end,
+        }
+    }
 }
